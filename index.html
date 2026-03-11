@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CAMMY COMBO LOG v1.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --base-bg: #1a251e;
+            --container-bg: #2a3b31;
+            --accent-red: #b32d2d;
+            --accent-yellow: #e6b800;
+            --text-main: #e0e0e0;
+            --display-bg: #000;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Courier New', monospace; 
+            background: var(--base-bg); 
+            color: var(--text-main); 
+            padding: 10px; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 500px;
+            background: var(--container-bg); 
+            padding: 15px; 
+            border-radius: 5px; 
+            border: 2px solid #111; 
+        }
+        
+        .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        input { 
+            background: #000; 
+            border: 1px solid var(--accent-yellow); 
+            color: #fff; 
+            padding: 12px; 
+            font-family: inherit; 
+            font-weight: bold; 
+            font-size: 16px;
+        }
+        #comboTitle { flex: 3; }
+        #comboDamage { flex: 1.2; text-align: center; }
+
+        .template-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+        .btn-temp { 
+            background: transparent; 
+            color: var(--accent-yellow); 
+            font-size: 0.75rem; 
+            padding: 6px 10px; 
+            border: 1px solid var(--accent-yellow); 
+            flex-grow: 1; 
+            text-align: center;
+        }
+
+        .capture-area { background: var(--display-bg); padding: 12px; border: 1px solid #444; margin-bottom: 12px; }
+        .info-line { display: flex; justify-content: space-between; color: var(--accent-yellow); font-size: 0.75rem; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px; }
+        #comboText { font-size: 14px; font-weight: bold; color: #00ffcc; word-break: break-all; min-height: 18px; line-height: 1.4; }
+
+        .section { margin-bottom: 12px; }
+        .section-label { font-size: 0.7rem; color: #888; margin-bottom: 6px; font-weight: bold; border-left: 3px solid var(--accent-red); padding-left: 8px; text-transform: uppercase;}
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 5px; }
+        button { 
+            border: none; 
+            padding: 12px 4px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 0.7rem; 
+            font-family: inherit; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            text-align: center;
+        }
+        button:active { opacity: 0.7; transform: scale(0.95); }
+
+        .btn-num { background: #3d5246; color: var(--accent-yellow); font-size: 1.1rem; } 
+        .btn-arrow { background: var(--accent-red); font-size: 1.2rem; }
+        .btn-move { background: #4a6356; } 
+        .btn-power { background: #5c4141; } 
+        .btn-attack { background: #4a5163; } 
+        .btn-spec { background: #635a4a; } 
+        .btn-extra { background: #5a4a63; } 
+
+        .tenkey-container { display: flex; gap: 8px; }
+        .tenkey-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 2; }
+        .arrow-wrap { flex: 1; display: flex; }
+        .btn-arrow { width: 100%; height: 100%; }
+
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn-copy { background: var(--accent-yellow); color: #000; grid-column: span 2; font-size: 1rem; }
+        .btn-save-img { background: var(--accent-red); grid-column: span 2; font-size: 1rem; }
+        .btn-back { background: #d48806; }
+        .btn-clear { background: #444; }
+
+        .history-area { background: rgba(0,0,0,0.3); padding: 8px; border: 1px solid #444; max-height: 180px; overflow-y: auto; margin-top: 8px; }
+        .history-item { padding: 10px 5px; border-bottom: 1px solid #333; cursor: pointer; }
+        .h-head { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: bold; margin-bottom: 2px; }
+        .h-title { color: var(--accent-yellow); }
+        .h-dmg { color: var(--accent-red); }
+        .h-body { color: #aaa; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="section-label">CAMMY COMBO LOG v1.0  制作者おのん X@onon588sub</div>
+    <div class="input-row">
+        <input type="text" id="comboTitle" placeholder="タイトルを入力" oninput="updateUI()">
+        <input type="text" id="comboDamage" placeholder="ダメージ" readonly onclick="focusDmg()">
+    </div>
+    
+    <div class="template-grid">
+        <button class="btn-temp" onclick="setTitle('基礎コンボ')">基礎</button>
+        <button class="btn-temp" onclick="setTitle('応用コンボ')">応用</button>
+        <button class="btn-temp" onclick="setTitle('どこでもコンボ')">どこでも</button>
+        <button class="btn-temp" onclick="setTitle('画面端コンボ')">画面端</button>
+        <button class="btn-temp" onclick="setTitle('確定反撃コンボ')">確定反撃</button>
+        <button class="btn-temp" onclick="setTitle('空対空コンボ')">空対空</button>
+    </div>
+
+    <div id="captureArea" class="capture-area">
+        <div class="info-line">
+            <span id="liveTitle">COMBO: 無題</span>
+            <span id="liveDamage">DMG: ----</span>
+        </div>
+        <div id="comboText">---</div>
+    </div>
+
+    <div class="section">
+        <div class="tenkey-container">
+            <div class="tenkey-grid">
+                <button class="btn-num" onclick="smartInput('7')">7</button><button class="btn-num" onclick="smartInput('8')">8</button><button class="btn-num" onclick="smartInput('9')">9</button>
+                <button class="btn-num" onclick="smartInput('4')">4</button><button class="btn-num" onclick="smartInput('5')">5</button><button class="btn-num" onclick="smartInput('6')">6</button>
+                <button class="btn-num" onclick="smartInput('1')">1</button><button class="btn-num" onclick="smartInput('2')">2</button><button class="btn-num" onclick="smartInput('3')">3</button>
+                <button class="btn-num" onclick="smartInput('0')" style="grid-column: span 3;">0</button>
+            </div>
+            <div class="arrow-wrap">
+                <button class="btn-arrow" onclick="recipeInput(' > ')">＞</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-label">〇立・屈・J・A・SP・DR・DI・DP・微歩き・ディレイ・微タメ・タメ</div>
+        <div class="grid">
+            <button class="btn-move" onclick="recipeInput('立')">立</button>
+            <button class="btn-move" onclick="recipeInput('屈')">屈</button>
+            <button class="btn-move" onclick="recipeInput('J')">J</button>
+            <button class="btn-move" onclick="recipeInput('A')">A</button>
+            <button class="btn-move" onclick="recipeInput('SP')">SP</button>
+            <button class="btn-move" onclick="recipeInput('DR')">DR</button>
+            <button class="btn-move" onclick="recipeInput('DI')">DI</button>
+            <button class="btn-move" onclick="recipeInput('DP')">DP</button>
+            <button class="btn-move" onclick="recipeInput('微歩き')">微歩き</button>
+            <button class="btn-move" onclick="recipeInput('ディレイ')">ディレイ</button>
+            <button class="btn-move" onclick="recipeInput('微タメ')">微タメ</button>
+            <button class="btn-move" onclick="recipeInput('タメ')">タメ</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-label">〇弱・中・強・OD</div>
+        <div class="grid">
+            <button class="btn-power" onclick="recipeInput('弱')">弱</button>
+            <button class="btn-power" onclick="recipeInput('中')">中</button>
+            <button class="btn-power" onclick="recipeInput('強')">強</button>
+            <button class="btn-power" onclick="recipeInput('OD')">OD</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-label">〇P・K・SA</div>
+        <div class="grid">
+            <button class="btn-attack" onclick="recipeInput('P')">P</button>
+            <button class="btn-attack" onclick="recipeInput('K')">K</button>
+            <button class="btn-attack" onclick="recipeInput('SA1')">SA1</button>
+            <button class="btn-attack" onclick="recipeInput('SA2')">SA2</button>
+            <button class="btn-attack" onclick="recipeInput('SA3')">SA3</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-label">〇アロー・スパイク・ナックル・ストライク</div>
+        <div class="grid">
+            <button class="btn-spec" onclick="recipeInput('アロー')">アロー</button>
+            <button class="btn-spec" onclick="recipeInput('スパイク')">スパイク</button>
+            <button class="btn-spec" onclick="recipeInput('ナックル')">ナックル</button>
+            <button class="btn-spec" onclick="recipeInput('ストライク')">ストライク</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-label">〇フーリガン・投げ・中段・急停止</div>
+        <div class="grid">
+            <button class="btn-extra" onclick="recipeInput('フーリガン')">フーリガン</button>
+            <button class="btn-extra" onclick="recipeInput('投げ')">投げ</button>
+            <button class="btn-extra" onclick="recipeInput('中段')">中段</button>
+            <button class="btn-extra" onclick="recipeInput('急停止')">急停止</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-back" onclick="backspace()">1字消去</button>
+        <button class="btn-clear" onclick="clearAll()">リセット</button>
+        <button class="btn-copy" onclick="copyText()">📋 テキストをコピー</button>
+        <button class="btn-save-img" onclick="saveAsImage()">💾 画像を保存</button>
+    </div>
+
+    <div class="section-label" style="margin-top:20px;">ARCHIVE</div>
+    <div id="historyList" class="history-area"></div>
+</div>
+
+<script>
+    let comboArr = []; let savedData = [];
+    let isDmgMode = false; 
+    const display = document.getElementById('comboText');
+    const titleIn = document.getElementById('comboTitle');
+    const dmgIn = document.getElementById('comboDamage');
+
+    function smartInput(num) {
+        if (isDmgMode) {
+            dmgIn.value += num;
+            updateUI();
+        } else {
+            recipeInput(num);
+        }
+    }
+
+    function recipeInput(val) {
+        isDmgMode = false;
+        dmgIn.style.backgroundColor = "#000";
+        comboArr.push(val);
+        updateUI();
+    }
+
+    function focusDmg() {
+        isDmgMode = true;
+        dmgIn.style.backgroundColor = "#222";
+    }
+
+    function backspace() {
+        if (isDmgMode && dmgIn.value.length > 0) {
+            dmgIn.value = dmgIn.value.slice(0, -1);
+        } else {
+            isDmgMode = false;
+            dmgIn.style.backgroundColor = "#000";
+            comboArr.pop();
+        }
+        updateUI();
+    }
+
+    function setTitle(t) { titleIn.value = t; updateUI(); }
+    function updateUI() {
+        display.innerText = comboArr.join('') || "---";
+        document.getElementById('liveTitle').innerText = "COMBO: " + (titleIn.value || "無題");
+        document.getElementById('liveDamage').innerText = "DMG: " + (dmgIn.value || "----");
+    }
+
+    function clearAll() { 
+        comboArr = []; titleIn.value = ""; dmgIn.value = ""; 
+        isDmgMode = false; dmgIn.style.backgroundColor = "#000";
+        updateUI(); 
+    }
+
+    function copyText() {
+        const text = comboArr.join('');
+        const title = titleIn.value || "無題";
+        const dmg = dmgIn.value ? ` [DMG:${dmgIn.value}]` : "";
+        if(!text) return;
+        const full = `【${title}${dmg}】\n${text}`;
+        navigator.clipboard.writeText(full).then(() => {
+            savedData.unshift({ title, dmg: dmgIn.value, body: text });
+            updateHistory();
+            alert("コピー完了!");
+        });
+    }
+
+    function saveAsImage() {
+        html2canvas(document.getElementById('captureArea'), {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `cammy_${titleIn.value || 'combo'}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    function updateHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = savedData.map(item => `
+            <div class="history-item" onclick="reCopy('${item.title}', '${item.dmg}', '${item.body}')">
+                <div class="h-head"><span class="h-title">${item.title}</span><span class="h-dmg">${item.dmg ? 'D:'+item.dmg : ''}</span></div>
+                <div class="h-body">${item.body}</div>
+            </div>
+        `).join('');
+    }
+
+    function reCopy(t, d, b) {
+        const full = `【${t}${d ? ' [DMG:'+d+']' : ''}】\n${b}`;
+        navigator.clipboard.writeText(full);
+        alert("再コピー完了！");
+    }
+</script>
+</body>
+</html>
